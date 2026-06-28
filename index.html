@@ -8,38 +8,54 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; color: #1d1d1f; }
-  .header { background: #1d1d1f; color: white; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
-  .header h1 { font-size: 22px; font-weight: 600; }
-  .header small { color: #888; font-size: 13px; }
-  .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
-  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-  .card { background: white; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-  .card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
-  .card .value { font-size: 30px; font-weight: 700; }
-  .card .sub { font-size: 12px; color: #888; margin-top: 4px; }
+  .header { background: #1d1d1f; color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .header h1 { font-size: 18px; font-weight: 600; }
+  .header small { color: #888; font-size: 12px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 20px 16px; }
+  .cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+  .card { background: white; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card .label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+  .card .value { font-size: 26px; font-weight: 700; }
+  .card .sub { font-size: 11px; color: #888; margin-top: 4px; }
   .card.accent .value { color: #0071e3; }
-  .row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
-  .panel { background: white; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-  .panel h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #1d1d1f; }
-  .chart-wrap { position: relative; height: 200px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  th { text-align: left; padding: 8px 10px; color: #888; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
-  td { padding: 8px 10px; border-bottom: 1px solid #f9f9f9; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+  .panel { background: white; border-radius: 12px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.08); margin-bottom: 0; }
+  .panel h2 { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: #1d1d1f; }
+  .chart-wrap { position: relative; height: 180px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; padding: 7px 8px; color: #888; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
+  td { padding: 7px 8px; border-bottom: 1px solid #f9f9f9; word-break: break-word; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
   .badge-filter { background: #e8f4fd; color: #0071e3; }
   .badge-digest { background: #fdf0e8; color: #d4600a; }
   ul { list-style: none; font-size: 13px; }
   ul li { padding: 5px 0; border-bottom: 1px solid #f5f5f5; color: #333; }
-  .donut-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .donut-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
   .full { grid-column: 1 / -1; }
+  .gap { margin-bottom: 20px; }
+  /* Tablet and up */
+  @media (min-width: 600px) {
+    .cards { grid-template-columns: repeat(4, 1fr); }
+    .donut-row { grid-template-columns: 1fr 1fr; }
+    .row { grid-template-columns: 2fr 1fr; }
+  }
+  /* Desktop */
+  @media (min-width: 900px) {
+    .header { padding: 24px 32px; }
+    .header h1 { font-size: 22px; }
+    .container { padding: 28px 24px; }
+    .card .value { font-size: 30px; }
+    .chart-wrap { height: 200px; }
+    table { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>📬 Gmail Agent — Cost Dashboard</h1>
-  <small>Updated 2026-06-28 14:13</small>
+  <small>Updated 2026-06-28 14:24</small>
 </div>
 
 <div class="container">
@@ -69,7 +85,7 @@
   </div>
 
   <!-- Daily cost chart -->
-  <div class="panel" style="margin-bottom:24px">
+  <div class="panel gap">
     <h2>Daily cost — last 30 days</h2>
     <div class="chart-wrap">
       <canvas id="dailyChart"></canvas>
@@ -98,7 +114,7 @@
   </div>
 
   <!-- Memory state -->
-  <div class="row" style="margin-bottom:24px;">
+  <div class="row gap">
     <div class="panel">
       <h2>Learned filter rules</h2>
       <ul><li style='color:#888'>None yet</li></ul>
