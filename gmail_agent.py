@@ -138,6 +138,70 @@ def tool_send_digest(service, subject: str, html_body: str) -> dict:
     return {"success": True, "message_id": sent["id"], "thread_id": sent.get("threadId")}
 
 
+def send_cost_report(service):
+    """Send a daily cost summary email with a link to the live dashboard."""
+    data = costs.load()
+    runs = data.get("runs", [])
+    today = datetime.now().date().isoformat()
+    this_month = datetime.now().strftime("%Y-%m")
+
+    today_cost = sum(r["cost_usd"] for r in runs if r["timestamp"].startswith(today))
+    month_cost = sum(r["cost_usd"] for r in runs if r["timestamp"].startswith(this_month))
+    total_cost = data.get("total_cost_usd", 0.0)
+    today_runs = [r for r in runs if r["timestamp"].startswith(today)]
+    filter_today = sum(r["cost_usd"] for r in today_runs if r["agent"] == "filter")
+    digest_today = sum(r["cost_usd"] for r in today_runs if r["agent"] == "digest")
+
+    dashboard_url = "https://elitsay.github.io/gmail-agent/"
+
+    html = f"""
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; color: #1d1d1f;">
+      <div style="background: #1d1d1f; color: white; padding: 20px 28px; border-radius: 12px 12px 0 0;">
+        <h2 style="margin:0; font-size:18px;">💰 Gmail Agent — Daily Cost Report</h2>
+        <p style="margin:6px 0 0; color:#aaa; font-size:13px;">{datetime.now().strftime("%A, %B %d, %Y")}</p>
+      </div>
+      <div style="border: 1px solid #e5e5e5; border-top: none; padding: 24px 28px; border-radius: 0 0 12px 12px;">
+        <table style="width:100%; border-collapse:collapse; font-size:15px;">
+          <tr>
+            <td style="padding:10px 0; color:#888; border-bottom:1px solid #f0f0f0;">Today</td>
+            <td style="padding:10px 0; text-align:right; font-weight:600; border-bottom:1px solid #f0f0f0;">${today_cost:.5f}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; color:#888; border-bottom:1px solid #f0f0f0; padding-left:16px; font-size:13px;">↳ Filter agent</td>
+            <td style="padding:10px 0; text-align:right; font-size:13px; color:#555; border-bottom:1px solid #f0f0f0;">${filter_today:.5f}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; color:#888; border-bottom:1px solid #f0f0f0; padding-left:16px; font-size:13px;">↳ Digest agent</td>
+            <td style="padding:10px 0; text-align:right; font-size:13px; color:#555; border-bottom:1px solid #f0f0f0;">${digest_today:.5f}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; color:#888; border-bottom:1px solid #f0f0f0;">This month</td>
+            <td style="padding:10px 0; text-align:right; font-weight:600; border-bottom:1px solid #f0f0f0;">${month_cost:.4f}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; color:#888;">All time</td>
+            <td style="padding:10px 0; text-align:right; font-weight:600;">${total_cost:.4f}</td>
+          </tr>
+        </table>
+        <div style="margin-top:24px; text-align:center;">
+          <a href="{dashboard_url}" style="background:#0071e3; color:white; padding:12px 28px; border-radius:8px; text-decoration:none; font-size:14px; font-weight:500;">
+            View Full Dashboard →
+          </a>
+        </div>
+      </div>
+    </div>
+    """
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"Gmail Agent cost — {today} (${today_cost:.5f} today)"
+    msg["From"] = YOUR_EMAIL
+    msg["To"] = YOUR_EMAIL
+    msg.attach(MIMEText(html, "html"))
+    raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
+    service.users().messages().send(userId="me", body={"raw": raw}).execute()
+    print(f"✓ Cost report sent (today: ${today_cost:.5f})")
+
+
 def tool_read_memory() -> dict:
     return mem.load()
 
@@ -380,6 +444,7 @@ def run():
             print(f"\n✓ Done. Cost this run: ${run_cost:.4f}")
             dashboard.build_dashboard()
             dashboard.push_to_github()
+            send_cost_report(service)
             break
 
         if response.stop_reason == "tool_use":

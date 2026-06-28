@@ -14,7 +14,7 @@ from collections import defaultdict
 import costs as cost_tracker
 import memory as mem
 
-DASHBOARD_PATH = os.path.join(os.path.dirname(__file__), "dashboard.html")
+DASHBOARD_PATH = os.path.join(os.path.dirname(__file__), "index.html")
 
 
 def build_dashboard():
@@ -265,7 +265,7 @@ def push_to_github():
         return result.returncode, result.stdout.strip(), result.stderr.strip()
 
     # Stage only the safe files (no secrets)
-    files = ["dashboard.html", "costs.json", "memory.json"]
+    files = ["index.html", "costs.json", "memory.json"]
     for f in files:
         path = os.path.join(repo, f)
         if os.path.exists(path):
