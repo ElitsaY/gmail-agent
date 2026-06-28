@@ -1,0 +1,11 @@
+# Secrets — never commit these
+token.json
+credentials.json
+
+# Runtime data (committed selectively)
+__pycache__/
+*.pyc
+*.log
+
+# OS
+.DS_Store

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gmail Agent Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f7; color: #1d1d1f; }
+  .header { background: #1d1d1f; color: white; padding: 24px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header small { color: #888; font-size: 13px; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+  .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .card { background: white; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+  .card .value { font-size: 30px; font-weight: 700; }
+  .card .sub { font-size: 12px; color: #888; margin-top: 4px; }
+  .card.accent .value { color: #0071e3; }
+  .row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .panel { background: white; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .panel h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #1d1d1f; }
+  .chart-wrap { position: relative; height: 200px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; color: #888; font-weight: 500; border-bottom: 1px solid #f0f0f0; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f9f9f9; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; }
+  .badge-filter { background: #e8f4fd; color: #0071e3; }
+  .badge-digest { background: #fdf0e8; color: #d4600a; }
+  ul { list-style: none; font-size: 13px; }
+  ul li { padding: 5px 0; border-bottom: 1px solid #f5f5f5; color: #333; }
+  .donut-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .full { grid-column: 1 / -1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📬 Gmail Agent — Cost Dashboard</h1>
+  <small>Updated 2026-06-28 13:46</small>
+</div>
+
+<div class="container">
+
+  <!-- Summary cards -->
+  <div class="cards">
+    <div class="card accent">
+      <div class="label">Total spent</div>
+      <div class="value">$0.0000</div>
+      <div class="sub">all time</div>
+    </div>
+    <div class="card">
+      <div class="label">This month</div>
+      <div class="value">$0.0000</div>
+      <div class="sub">June 2026</div>
+    </div>
+    <div class="card">
+      <div class="label">Today</div>
+      <div class="value">$0.00000</div>
+      <div class="sub">0 total runs</div>
+    </div>
+    <div class="card">
+      <div class="label">Emails processed</div>
+      <div class="value">0</div>
+      <div class="sub">0 filtered out</div>
+    </div>
+  </div>
+
+  <!-- Daily cost chart -->
+  <div class="panel" style="margin-bottom:24px">
+    <h2>Daily cost — last 30 days</h2>
+    <div class="chart-wrap">
+      <canvas id="dailyChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Donut + breakdowns -->
+  <div class="donut-row">
+    <div class="panel">
+      <h2>Cost by agent</h2>
+      <div style="max-width:180px; margin:0 auto;">
+        <canvas id="donutChart"></canvas>
+      </div>
+      <div style="display:flex; gap:16px; justify-content:center; margin-top:12px; font-size:13px;">
+        <span><span style="color:#0071e3">■</span> Filter $0.0000</span>
+        <span><span style="color:#d4600a">■</span> Digest $0.0000</span>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Top filtered senders</h2>
+      <table>
+        <tr><th>Sender</th><th style="text-align:right">Times</th></tr>
+        <tr><td colspan='2' style='color:#888'>No data yet</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Memory state -->
+  <div class="row" style="margin-bottom:24px;">
+    <div class="panel">
+      <h2>Learned filter rules</h2>
+      <ul><li style='color:#888'>None yet</li></ul>
+    </div>
+    <div class="panel">
+      <h2>Frequent contacts</h2>
+      <ul><li style='color:#888'>None yet</li></ul>
+    </div>
+  </div>
+
+  <!-- Recent runs -->
+  <div class="panel">
+    <h2>Recent runs</h2>
+    <table>
+      <tr>
+        <th>Time</th><th>Agent</th><th>Model</th>
+        <th style="text-align:right">Input tokens</th>
+        <th style="text-align:right">Output tokens</th>
+        <th style="text-align:right">Cost</th>
+      </tr>
+      <tr><td colspan='6' style='color:#888'>No runs yet</td></tr>
+    </table>
+  </div>
+
+</div>
+
+<script>
+const dailyCtx = document.getElementById('dailyChart').getContext('2d');
+new Chart(dailyCtx, {
+  type: 'bar',
+  data: {
+    labels: ["2026-05-30", "2026-05-31", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28"],
+    datasets: [{
+      label: 'Cost (USD)',
+      data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      backgroundColor: '#0071e3',
+      borderRadius: 4,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { ticks: { callback: v => '$' + v.toFixed(4) }, grid: { color: '#f0f0f0' } },
+      x: { grid: { display: false }, ticks: { maxTicksLimit: 10, font: { size: 11 } } }
+    }
+  }
+});
+
+const donutCtx = document.getElementById('donutChart').getContext('2d');
+new Chart(donutCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Filter', 'Digest'],
+    datasets: [{ data: [0.00000, 0.00000], backgroundColor: ['#0071e3', '#d4600a'], borderWidth: 0 }]
+  },
+  options: { plugins: { legend: { display: false } }, cutout: '70%' }
+});
+</script>
+</body>
+</html>
